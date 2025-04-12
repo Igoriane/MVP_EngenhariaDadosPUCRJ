@@ -1,0 +1,23 @@
+## 📊 Linhagem de Dados
+
+Todos os dados foram extraídos de arquivos CSV contendo dados do banco Northwind.
+
+### Origem dos dados:
+- **Fonte**: Arquivos CSV disponibilizados previamente na atividade (Northwind Dataset)
+- **Local de ingestão**: Camada Bronze (`/FileStore/bronze/`)
+- **Formato original**: CSV
+
+### Técnica de ingestão:
+- Leitura de arquivos CSV via Spark (`spark.read.csv`)
+- Esquema inferido automaticamente ou definido manualmente
+- Escrita como Delta Lake na camada Bronze
+
+### Transformações:
+- Tipagem das colunas (cast de tipos corretos)
+- Remoção de colunas desnecessárias
+- Criação de colunas derivadas em alguns casos (ex: `order_date` como timestamp)
+- Escrita em formato Delta na **camada Silver**, garantindo melhor performance e consistência dos dados
+
+### Organização das camadas:
+- **Camada Bronze**: dados crus, conforme extraídos
+- **Camada Silver**: dados limpos, tipados, com relacionamentos respeitados
