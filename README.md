@@ -102,7 +102,7 @@ Após a transformação na camada Silver, o dado se apresenta:
 
 Nesta etapa, apresento as respostas às perguntas de negócio definidas no início do projeto. A seguir, descrevo cada pergunta, a consulta técnica utilizada para obtê-la e a discussão dos resultados.
 
-## Pergunta 1: Qual é a tendência das vendas ao longo do tempo?
+## Pergunta 1: Como a empresa está desempenhando ao longo do tempo? Existe sazonalidade nas vendas? Existe evolução ou involução ao longo dos anos?
 
 ## Solução do Problema
 
@@ -122,6 +122,10 @@ GROUP BY date_trunc('month', order_date)
 ORDER BY mes;
 ```
 
+## Pergunta 2: Qual a região mais lucrativa para a empresa? Ela deve investir em lojas em qual região?
+
+## Solução do Problema
+
 ### Vendas por Região
 
 A consulta abaixo foi utilizada para tentar identificar qual a região que rende mais vendas a empresa:
@@ -139,6 +143,10 @@ JOIN northwind_dw.customers c
 GROUP BY c.region
 ORDER BY total_vendas DESC;
 ```
+
+## Pergunta 3: Qual o tipo de produto ao qual é mais vendido pela empresa? Existe um desempenho semelhante? Pode-se dizer que a região com mais vendas impacta no produto mais vendido?
+
+## Solução do Problema
 
 ### Contribuição de Cada Categoria nas Vendas
 
