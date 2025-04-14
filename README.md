@@ -93,18 +93,33 @@ Nesta seção, descrevo o procedimento que realizei para transformar o dado brut
 
 ---
 
-## 4. Conclusão
+## 4. Conclusão da Camada Silver
 
-Após a transformação na camada Silver, o dado se apresenta:
+Após a transformação na camada Silver, o dado se encontra:
 - **Padronizado:** Todos os nomes de coluna estão em _snake_case_ e em minúsculo.
 - **Tipado Corretamente:** Datas em formato `date` e campos numéricos convertidos para os tipos adequados.
 - **Limpo:** Colunas irrelevantes foram removidas, e os problemas de leitura de CSV (como vírgulas em textos) foram solucionados.
 - **Integrado:** Os relacionamentos entre as tabelas estão íntegros, o que possibilita a construção de um modelo de dados confiável (esquema estrela) para o Data Warehouse.
 - **Valores Nulos:** Foi possível notar algumas colunas com valores nulos que podem descrever uma possível ausência de informação, isso pode ser classificado como um problema na base de dados que o negócio precisa ter conhecimento para tratamento no sistema principal.
 
-# Solução do Problema
+## 5. Carga dos Dados para Camada Gold
 
-Nesta etapa, apresento as respostas às perguntas de negócio definidas no início do projeto. A seguir, descrevo cada pergunta, a consulta técnica utilizada para obtê-la e a discussão dos resultados.
+Além das transformações detalhadas na camada Silver, realizei a carga dos dados para o Data Warehouse final (camada Gold) utilizando o comando `saveAsTable` do Databricks. Essa etapa garante que os dados limpos e validados sejam registrados de forma permanente e possam ser consultados por meio de SQL e assim as respostas das perguntas iniciais sejam realizadas. 
+
+```python
+# Exemplo: Carga dos dados para o Data Warehouse
+spark.sql("CREATE DATABASE IF NOT EXISTS northwind_dw")
+tabelas = ["categories", "customers", "employees", "employee_territories", "order_details", "orders", "products", "regions", "shippers", "suppliers", "territories"]
+caminho_prata = "/FileStore/silver/"
+
+for tabela in tabelas:
+    df = spark.read.format("delta").load(f"{caminho_prata}{tabela}")
+    df.write.format("delta").mode("overwrite").saveAsTable(f"northwind_dw.{tabela}")
+```
+
+# 6. Solução do Problema
+
+Nesta etapa, apresento as respostas às perguntas de negócio definidas no início. A seguir, descrevo cada pergunta, a consulta técnica utilizada para obtê-la e a discussão dos resultados.
 
 ## Pergunta 1: Como a empresa está desempenhando ao longo do tempo? Existe sazonalidade nas vendas? Existe evolução ou involução ao longo dos anos?
 
@@ -125,6 +140,8 @@ JOIN northwind_dw.order_details od
 GROUP BY date_trunc('month', order_date)
 ORDER BY mes;
 ```
+
+Foi possível notar uma leve sazonalidade negativa nos meses de meio de ano. Enquanto que o mês de abril de 1998 foi o de melhor desempenho, esse desempenho foi acompanhado pelos seus meses precursores desde o mês de Outubro de 1997. Também ficou claro que o desempenho da empresa vem crescendo no longo prazo, uma vez que o ano de 1996 é o ano que está com piores desempenhos, enquanto que o ano de 1998 é o com melhor desempenho.
 
 ## Pergunta 2: Qual a região mais lucrativa para a empresa? Ela deve investir em lojas em qual região?
 
@@ -148,6 +165,8 @@ GROUP BY c.region
 ORDER BY total_vendas DESC;
 ```
 
+Essa foi uma das análises que foi prejudicada pela má ingestão de dados, provavelmente proveniente de um campo livre no sistema interno da empresa. Isso por que a coluna de região tem diversas informações nulas e/ou pouco padrozinadas. Enquanto Rio de Janeiro e Québec são regiões, temos estados com siglas como WA e OR. Dessa forma pouco pode ser presumido com relação a qual região que gera mais lucros. O fato é que podemos apenas afirmar que a região que tem a melhor padronização versus vendas parece ser a do Rio de Janeiro. No entanto o analista de dados deve refletir se Rio de Janeiro e São Paulo não deveriam ser tratados como uma região única chamada Brazil, ou até mesmo América do Sul ou Latina. Isso por que a empresa não é Brasileira e isso pode refletir melhor a sua posição global.
+
 ## Pergunta 3: Qual o tipo de produto ao qual é mais vendido pela empresa? Existe um desempenho semelhante? Pode-se dizer que a região com mais vendas impacta no produto mais vendido?
 
 ## Solução do Problema
@@ -169,3 +188,23 @@ JOIN northwind_dw.categories cat
 GROUP BY cat.category_name
 ORDER BY total_vendas_categoria DESC;
 ```
+
+Por fim, essa é uma análise que foi possível ser feita de modo completo uma vez que a tabela de categorias é uma das tabelas mais consistentes da base de dados da Northwind. É possível organizar o altíssimo desempenho de bebidas e produtos do dia a dia frente aos outros produtos da empresa. Uma vez que a categoria Bebidas demonstrou um ganho de cerca de 60% frente as carnes que são o 3º produto mais vendido pela empresa. Enquanto os dois produtos menos vendidos combinados não consegue nem chegar ao nível do segundo produto mais vendido, Dairy Products (produtos do dia a dia)
+
+
+# 7. Conclusão
+
+# Conclusão
+
+# Conclusão
+
+Ao longo deste projeto, a transformação aplicada na camada Silver evidenciou não apenas a viabilidade de um pipeline ETL robusto, mas também os desafios práticos que se impõem ao tratar dados provenientes de fontes heterogêneas. A padronização das colunas, a conversão dos tipos de dados e o cuidado com os delimitadores demonstraram a complexidade intrínseca à organização dos dados brutos em um formato consistente e confiável.
+
+Além disso, a escolha de utilizar DW para armazenar os dados transformados evidenciou uma abordagem proativa em termos de governança e versionamento dos dados. Esse formato não apenas facilitou a reprocessamento e auditoria do pipeline, como também garantiu operações transacionais seguras, o que é fundamental para ambientes que demandam escalabilidade e confiabilidade.
+
+A reestruturação do pipeline em camadas – diferenciando a ingestão bruta, a transformação aprofundada e, finalmente, a carga para o Data Warehouse – permitiu um controle detalhado do fluxo de dados, onde cada etapa é validada tanto em termos de integridade quanto de consistência. Essa divisão modular contribuiu para a identificação precoce de inconsistências e oferece uma base sólida para a implementação de melhorias contínuas uma vez que foi possível realizar transformações tanto na camada bronze quanto na prata.
+
+Resumindo, a experiência adquirida durante a transformação e a validação dos dados reforça a importância de uma estratégia de ETL com cuidado, que ultrapassa a mera execução de comandos, integrando um pensamento crítico sobre a qualidade dos dados e os desafios de harmonizá-los. E que mesmo com todo o cuidado pode-se ainda não ter uma análise consistente de todos os fatores caso a base de dados não seja íntegra o suficiente. Não é suficiente que as áreas de negócio e que a gerência apenas queiram fazer uma análise de dados, ou desejem ter as ultimas tecnologias. É necessário que exista um comprometimento completo com a integridade dos dados.
+
+
+
