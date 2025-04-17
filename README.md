@@ -4,10 +4,6 @@
 https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/1306962464841166/540095536058281/8644182617735510/latest.html
 O código está disponível no arquivo MVP.ipynb também
 
-# Análise de Qualidade e Transformação do Dado – Camada Silver
-
-Nesta seção, descrevo o procedimento que realizei para transformar o dado bruto (Camada Bronze) em dado limpo, padronizado e apto para ser carregado no Data Warehouse. O foco é demonstrar a qualidade do dado e justificar os ajustes aplicados durante a etapa de transformação (Camada Silver).
-
 ---
 
 ## 1. Ingestão e Organização Inicial
